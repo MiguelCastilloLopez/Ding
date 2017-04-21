@@ -1011,7 +1011,35 @@ class ContainerImpl implements IContainer
         $this->_lastErrorMessage = $msg;
         $this->_logger->error($msg);
         $this->eventDispatch(
-            'dingError', new ErrorInfo($type, $message, $file, $line)
+            'dingError', new ErrorInfo($type, $message, $file, $line, mt_rand(1000,9999), date("Y-m-d H:i:s"))
+        );
+        return true;
+    }
+	
+	/**
+     * Called by php after set_error_handler()
+     *
+     * @param Exception $exception
+     *
+     * @return true
+     */
+    public function exceptionHandler($exception)
+    {
+        $msg = $exception->getMessage()." in ".$exception->getFile().":".$exception->getLine();
+        if ($msg == $this->_lastErrorMessage) {
+            return;
+        }
+        $this->_lastErrorMessage = $exception->getMessage();
+        $this->_logger->error($msg);
+        $this->eventDispatch(
+            'dingError', new ErrorInfo(
+				get_class($exception), 
+				$exception->getMessage(),
+				$exception->getFile(), 
+				$exception->getLine(), 
+				$exception->getCode(), 
+				date("Y-m-d H:i:s")
+			)
         );
         return true;
     }
@@ -1068,7 +1096,7 @@ class ContainerImpl implements IContainer
         self::$_options = array_replace_recursive(self::$_options, $options);
         $this->registerProperties(self::$_options['properties']);
         $sapi = php_sapi_name();
-        if (function_exists('pcntl_signal')) {
+        if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
             if ($sapi == 'cgi' || $sapi == 'cli') {
                 $signals = array(
                     SIGQUIT, SIGHUP, SIGINT, SIGCHLD, SIGTERM, SIGUSR1, SIGUSR2
@@ -1081,6 +1109,7 @@ class ContainerImpl implements IContainer
             }
         }
         set_error_handler(array($this, 'errorHandler'));
+		set_exception_handler(array($this, 'exceptionHandler'));
         register_shutdown_function(array($this, 'shutdownHandler'));
 
         $this->_lifecycleManager = new BeanLifecycleManager;

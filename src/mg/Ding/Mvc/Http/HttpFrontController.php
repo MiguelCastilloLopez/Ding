@@ -29,7 +29,6 @@
 namespace Ding\Mvc\Http;
 
 use Ding\Mvc\IViewRender;
-use Ding\HttpSession\HttpSession;
 use Ding\Mvc\IMapper;
 use Ding\Mvc\Exception\MvcException;
 use Ding\Mvc\ModelAndView;
@@ -64,6 +63,7 @@ class HttpFrontController
         IMapper $mapper,
         IViewRender $render
     ) {
+        self::$_logger->info("INFO DISPATCHER");
         $dispatchInfo = $mapper->map($action);
         if ($dispatchInfo === false) {
             throw new MvcException(
@@ -75,6 +75,10 @@ class HttpFrontController
 
         self::$_logger->debug(
         	'Found mapped controller: ' . get_class($controller)
+            . ' with action: ' . $actionHandler
+        );
+        self::$_logger->info(
+            'Found mapped controller: ' . get_class($controller)
             . ' with action: ' . $actionHandler
         );
         $modelAndView = $dispatcher->dispatch($dispatchInfo);
@@ -115,8 +119,7 @@ class HttpFrontController
     public static function handle(array $properties = array(), $baseUrl = '/')
     {
         $exceptionThrown = null;
-        $filtersPassed = true;
-        $session = HttpSession::getSession();
+        $filtersPassed = true;        
         $container = ContainerImpl::getInstance($properties);
         self::$_logger = \Logger::getLogger(__CLASS__);
         $baseUrlLen = strlen($baseUrl);
@@ -128,16 +131,20 @@ class HttpFrontController
             $dispatcher = $container->getBean('HttpDispatcher');
             $viewResolver = $container->getBean('HttpViewResolver');
             $exceptionMapper = $container->getBean('HttpExceptionMapper');
-            $render = $container->getBean('HttpViewRender');
+			$render = $container->getBean('HttpViewRender');
+			$render->setSession($container->getBean('SessionHandler'));
+			
             $method = strtolower($_SERVER['REQUEST_METHOD']);
             $url = $_SERVER['REQUEST_URI'];
             $urlStart = strpos($url, $baseUrl);
 
             self::$_logger->debug('Trying to match: ' . $url);
+            self::$_logger->info('Trying to match: ' . $url);
             if ($urlStart === false || $urlStart > 0) {
                 throw new MvcException($url . ' is not a base url.');
             }
             $url = substr($url, $baseUrlLen);
+            self::$_logger->info('Ruta : ' . $url);
             $variables = array();
             if (!empty($_GET)) {
                 $variables = array_merge($variables, $_GET);
@@ -145,6 +152,10 @@ class HttpFrontController
             if (!empty($_POST)) {
                 $variables = array_merge($variables, $_POST);
             }
+			if (!empty($_FILES)) {
+                $variables = array_merge($variables, $_FILES);
+            }            
+			
             $action = new HttpAction($url, $variables);
             $action->setMethod($method);
             $mapper = $container->getBean('HttpUrlMapper');

@@ -1,15 +1,15 @@
 <?php
 /**
- * Http session "facade".
+ * Http session Interface.
  *
  * PHP Version 5
  *
  * @category   Ding
  * @package    Mvc
  * @subpackage Http
- * @author     Marcelo Gornstein <marcelog@gmail.com>
- * @license    http://marcelog.github.com/ Apache License 2.0
- * @link       http://marcelog.github.com/
+ * @author     
+ * @license    Apache License 2.0
+ * @link       
  *
  * Copyright 2011 Marcelo Gornstein <marcelog@gmail.com>
  *
@@ -29,34 +29,25 @@
 namespace Ding\HttpSession;
 
 /**
- * Http session "facade".
+ * Http session Interface.
  *
  * PHP Version 5
  *
  * @category   Ding
  * @package    Mvc
  * @subpackage Http
- * @author     Marcelo Gornstein <marcelog@gmail.com>
- * @license    http://marcelog.github.com/ Apache License 2.0
- * @link       http://marcelog.github.com/
+ * @author     
+ * @license    Apache License 2.0
+ * @link       
  */
-class HttpSession implements IHttpSession
+interface IHttpSession
 {
-    /**
-     * Current instance.
-     * @var HttpSession
-     */
-    private $_instance = false;
-
     /**
      * Destroys the current session.
      *
      * @return void
      */
-    public function destroy()
-    {
-        session_destroy();
-    }
+    public function destroy();
 
     /**
      * Returns true if this session contains this attribute.
@@ -65,10 +56,8 @@ class HttpSession implements IHttpSession
      *
      * @return boolean
      */
-    public function hasAttribute($name)
-    {
-        return isset($_SESSION[$name]);
-    }
+    public function hasAttribute($name);
+	
     /**
      * Returns a previously saved session attribute with setAttribute().
      *
@@ -76,13 +65,7 @@ class HttpSession implements IHttpSession
      *
      * @return mixed
      */
-    public function getAttribute($name)
-    {
-        if (isset($_SESSION[$name])) {
-            return $_SESSION[$name];
-        }
-        return false;
-    }
+    public function getAttribute($name);
 
     /**
      * Saves an attribute to the session.
@@ -92,16 +75,5 @@ class HttpSession implements IHttpSession
      *
      * @return void
      */
-    public function setAttribute($name, $value)
-    {
-        $_SESSION[$name] = $value;
-    }
-	
-	public function init()
-	{
-		if(!$this->_instance) {
-			session_start();
-			$this->_instance = true;
-		}			
-	}
+    public function setAttribute($name, $value);
 }

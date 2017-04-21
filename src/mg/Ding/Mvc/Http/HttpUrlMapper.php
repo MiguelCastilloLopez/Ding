@@ -145,6 +145,7 @@ class HttpUrlMapper implements IMapper, IContainerAware, ILoggerAware
         $try = array_merge($this->_map, self::$_annotatedControllers);
         $candidates = array();
         foreach ($try as $map) {
+			//$this->_logger->info('MAP>>0'.$map[0].'    MAP>>1'.$map[1]);
             $controllerUrl = $map[0];
             $controller = $map[1];
             $interceptors = array();
@@ -164,7 +165,7 @@ class HttpUrlMapper implements IMapper, IContainerAware, ILoggerAware
             }
             $start = $controllerUrlStart + strlen($controllerUrl);
             $action = substr($url, $start);
-            if ($action === false) {
+            if ($action == false) {
                 $action = 'Main';
             }
             $action = explode('/', $action);
